@@ -8,8 +8,21 @@ var router = express.Router();
 router.use(bodyParser.json());
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.get('/', authenticate.veryUser ,function(req, res, next) {
+  if(authenticate.verifyAdmin(req.user)){
+    User.find({})
+    .then((users)=>{
+      res.statusCode=200;
+      res.setHeader('Content-Type','application/json');
+      res.json(users);
+    },(err) => next(err) )
+    .catch((err) => next(err));
+  }
+  else{
+    res.statusCode = 403;
+    res.setHeader('Content-Type','Plain-Text');
+    res.end('Only admins are allowed to do a delete operation!!');
+  }
 });
 
 router.post('/signup', (req,res,next) => {

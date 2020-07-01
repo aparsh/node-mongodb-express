@@ -20,27 +20,42 @@ promoRouter.route('/')
     .catch((err) => next(err));
 })
 .post(authenticate.veryUser, (req, res, next) => {
-        Promotions.create(req.body)
-        .then((promotion)=>{
-                console.log('Created Promotion ', promotion);
-                res.statusCode=200;
-                res.setHeader('Content-Type','application/json');
-                res.json(promotion);
-        },(err) => next(err) )
-        .catch((err) => next(err));
+        if(authenticate.verifyAdmin(req.user)){
+                Promotions.create(req.body)
+                .then((promotion)=>{
+                        console.log('Created Promotion ', promotion);
+                        res.statusCode=200;
+                        res.setHeader('Content-Type','application/json');
+                        res.json(promotion);
+                },(err) => next(err) )
+                .catch((err) => next(err));
+        }
+        else{
+                res.statusCode = 403;
+                res.setHeader('Content-Type','Plain-Text');
+                res.end('Only admins are allowed to do a delete operation!!');
+        }
 })
 .put(authenticate.veryUser, (req, res, next) => {
         res.statusCode = 403;
         res.end('PUT operation not supported on /promotions');
 })
 .delete(authenticate.veryUser, (req, res, next) => {
-        Promotions.deleteMany({})
-        .then((resp)=>{
-                res.statusCode=200;
-                res.setHeader('Content-Type','application/json');
-                res.json(resp);
-        },(err) => next(err) )
-        .catch((err) => next(err));
+        if(authenticate.verifyAdmin(req.user)){
+                Promotions.deleteMany({})
+                .then((resp)=>{
+                        res.statusCode=200;
+                        res.setHeader('Content-Type','application/json');
+                        res.json(resp);
+                },(err) => next(err) )
+                .catch((err) => next(err));
+        }
+        else{
+                err = new Error('Only admins can do that!!');
+                err.statusCode = 403;
+                next(err);
+        }
+
 });
 
 
@@ -58,24 +73,38 @@ promoRouter.route('/:promoId')
     res.end('POST operation not supported on /promotions/'+ req.params.promoId);
 })
 .put(authenticate.veryUser, (req, res, next) => {
-        Promotions.findByIdAndUpdate(req.params.promoId,{
-                $set:req.body
-        },{ new:true })
-        .then((promo)=>{
-                res.statusCode=200;
-                res.setHeader('Content-Type','application/json');
-                res.json(promo);
-        },(err) => next(err) )
-        .catch((err) => next(err));
+        if(authenticate.verifyAdmin(req.user)){
+                Promotions.findByIdAndUpdate(req.params.promoId,{
+                        $set:req.body
+                },{ new:true })
+                .then((promo)=>{
+                        res.statusCode=200;
+                        res.setHeader('Content-Type','application/json');
+                        res.json(promo);
+                },(err) => next(err) )
+                .catch((err) => next(err));
+        }
+        else{
+                err = new Error('Only admins can do that!!');
+                err.statusCode = 403;
+                next(err);
+        }
 })
 .delete(authenticate.veryUser, (req, res, next) => {
-        Promotions.findByIdAndDelete(req.params.promoId)
-        .then((resp)=>{
-                res.statusCode=200;
-                res.setHeader('Content-Type','application/json');
-                res.json(resp);
-        },(err) => next(err) )
-        .catch((err) => next(err));
+        if(authenticate.verifyAdmin(req.user)){
+                Promotions.findByIdAndDelete(req.params.promoId)
+                .then((resp)=>{
+                        res.statusCode=200;
+                        res.setHeader('Content-Type','application/json');
+                        res.json(resp);
+                },(err) => next(err) )
+                .catch((err) => next(err));
+        }
+        else{
+                err = new Error('Only admins can do that!!');
+                err.statusCode = 403;
+                next(err);
+        } 
 });
 
 module.exports = promoRouter;
