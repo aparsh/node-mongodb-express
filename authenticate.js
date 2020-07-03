@@ -5,9 +5,12 @@ const passport = require('passport');
 var JwtStratergy = require('passport-jwt').Strategy;
 var ExtractJwt = require('passport-jwt').ExtractJwt;
 var jwt = require('jsonwebtoken');
+var FcaebookTokenStratergy = require('passport-facebook-token');
 
 var config = require('./config');
 const { NotExtended } = require('http-errors');
+const user = require('./models/user');
+const e = require('express');
 
 
 
@@ -64,4 +67,33 @@ exports.verifyAdminInLine = (req, res, next) => {
         next(err);
     }
 }
+
+exports.FacebookPassport = passport.use(
+    new FcaebookTokenStratergy({
+    clientID: config.facebook.clientId,
+    clientSecret: config.facebook.clientSecret
+    }, (accessToken,refreshToken,profile,done)=>{
+    
+    user.findOne({FacebookId: profile.id}, (err,user)=>{
+        if(err){
+            return done(err,false);
+        }
+        if(!err && user!==null){
+            return done(null,user);
+        }
+        else{
+            var user = new User({username: profile.displayName});
+            user.FacebookId = profile.id;
+            user.firstname = profile.name.givenName;
+            user.lastname = profile.name.familyName;
+
+            user.save((err,user)=>{
+                if(err)
+                    return done(err,false);
+                else
+                    return done(false,user);
+            });
+        }
+    });
+}));
 
