@@ -3,6 +3,7 @@ const bodyparser = require('body-parser');
 const Promotions = require('../models/promotions');
 var url = require('url');
 var authenticate = require('../authenticate');
+const cors = require('./cors');
 
 
 const promoRouter = express.Router();
@@ -10,7 +11,7 @@ promoRouter.use(bodyparser.json());
 
 
 promoRouter.route('/')
-.get((req,res,next) => {;
+.get(cors.cors,(req,res,next) => {;
     Promotions.find({})
     .then((promotions)=>{
             res.statusCode = 200;
@@ -19,7 +20,7 @@ promoRouter.route('/')
     },(err) => next(err) )
     .catch((err) => next(err));
 })
-.post(authenticate.veryUser, (req, res, next) => {
+.post(cors.corsWithOptions,authenticate.veryUser, (req, res, next) => {
         if(authenticate.verifyAdmin(req.user)){
                 Promotions.create(req.body)
                 .then((promotion)=>{
@@ -36,11 +37,11 @@ promoRouter.route('/')
                 res.end('Only admins are allowed to do a delete operation!!');
         }
 })
-.put(authenticate.veryUser, (req, res, next) => {
+.put(cors.corsWithOptions,authenticate.veryUser, (req, res, next) => {
         res.statusCode = 403;
         res.end('PUT operation not supported on /promotions');
 })
-.delete(authenticate.veryUser, (req, res, next) => {
+.delete(cors.corsWithOptions,authenticate.veryUser, (req, res, next) => {
         if(authenticate.verifyAdmin(req.user)){
                 Promotions.deleteMany({})
                 .then((resp)=>{
@@ -60,7 +61,8 @@ promoRouter.route('/')
 
 
 promoRouter.route('/:promoId')
-.get((req,res,next) => {
+.get(cors.cors,
+        (req,res,next) => {
     Promotions.findById(req.params.promoId)
     .then((promo)=>{
         res.statusCode=200;
@@ -72,7 +74,7 @@ promoRouter.route('/:promoId')
 .post(authenticate.veryUser, (req, res, next) => {
     res.end('POST operation not supported on /promotions/'+ req.params.promoId);
 })
-.put(authenticate.veryUser, (req, res, next) => {
+.put(cors.corsWithOptions,authenticate.veryUser, (req, res, next) => {
         if(authenticate.verifyAdmin(req.user)){
                 Promotions.findByIdAndUpdate(req.params.promoId,{
                         $set:req.body
@@ -90,7 +92,7 @@ promoRouter.route('/:promoId')
                 next(err);
         }
 })
-.delete(authenticate.veryUser, (req, res, next) => {
+.delete(cors.corsWithOptions,authenticate.veryUser, (req, res, next) => {
         if(authenticate.verifyAdmin(req.user)){
                 Promotions.findByIdAndDelete(req.params.promoId)
                 .then((resp)=>{

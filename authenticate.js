@@ -7,6 +7,7 @@ var ExtractJwt = require('passport-jwt').ExtractJwt;
 var jwt = require('jsonwebtoken');
 
 var config = require('./config');
+const { NotExtended } = require('http-errors');
 
 
 
@@ -42,11 +43,25 @@ exports.jwtPassport = passport.use(new JwtStratergy(opts,
 
 exports.veryUser = passport.authenticate('jwt',{session:false});
 
-exports.verifyAdmin = function(user){
+exports.verifyAdmin = (user) =>{
     if(user.admin){
         return true;
     }
     else{
         return false;
     }
+};
+
+exports.verifyAdminInLine = (req, res, next) => {
+    if(req.user.admin)
+    {
+        next();
+    }
+    else
+    {
+        err = new Error('Only admins can do that!!');
+        err.statusCode = 403;
+        next(err);
+    }
 }
+
